@@ -13,6 +13,8 @@ namespace KIS
         [KSPField]
         public bool canDetach = false;
         [KSPField]
+        public bool detachModeIsWeld = false;
+        [KSPField]
         public float detachMaxMass = Mathf.Infinity;
         [KSPField]
         public float maxDistance = 2;

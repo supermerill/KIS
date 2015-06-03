@@ -15,12 +15,15 @@ namespace KIS
         [KSPField]
         public bool allowStack = false;
         [KSPField]
+        public bool attachModeIsWeld = false;
+        [KSPField]
         public string attachSndPath = "KIS/Sounds/attach";
         [KSPField]
         public string detachSndPath = "KIS/Sounds/detach";
         [KSPField]
         public string changeModeSndPath = "KIS/Sounds/click";
 
+        private bool orgDetachModeIsWeld;
         private string orgAttachSndPath, orgDetachSndPath;
         private float orgAttachMaxMass;
 
@@ -50,9 +53,34 @@ namespace KIS
                     float attachPartMass = KISAddonPointer.partToAttach.mass + KISAddonPointer.partToAttach.GetResourceMass();
                     if (attachPartMass < attachMaxMass)
                     {
-                        KISAddonPickup.instance.pointerMode = KISAddonPickup.PointerMode.Attach;
-                        KISAddonPointer.allowStack = allowStack;
-                        item.PlaySound(changeModeSndPath);
+                        //test if the tool can fix this part (screw or weld)
+                        bool testIfCanAttachPart = true;
+                        if (KISAddonPointer.partToAttach.Modules.Contains("ModuleKISPartAttachMode"))
+                        {
+                            ModuleFlightAttachMode mkpam = (KISAddonPointer.partToAttach.Modules["ModuleKISPartAttachMode"] as ModuleFlightAttachMode);
+                            if (!mkpam.canBeWeld && !mkpam.canBeScrewed)
+                            {
+                                ScreenMessages.PostScreenMessage("This part can't be attached", 5, ScreenMessageStyle.UPPER_CENTER);
+                                testIfCanAttachPart = false;
+                            }
+                            else
+                            {
+                                testIfCanAttachPart = attachModeIsWeld ? mkpam.canBeWeld : mkpam.canBeScrewed;
+                                item.PlaySound(KIS_Shared.bipWrongSndPath);
+                                if (!testIfCanAttachPart)
+                                {
+                                    ScreenMessages.PostScreenMessage("This part can't be attached with this tool: it need a " +
+                                        (attachModeIsWeld ? "screwdriver" : "weld tool"), 5, ScreenMessageStyle.UPPER_CENTER);
+                                }
+                            }
+                        }
+                        if (testIfCanAttachPart)
+                        {
+                            KISAddonPickup.instance.pointerMode = KISAddonPickup.PointerMode.Attach;
+                            KISAddonPointer.allowStack = allowStack;
+                            KISAddonPointer.toolAttachModeIsWeld = attachModeIsWeld;
+                            item.PlaySound(changeModeSndPath);
+                        }
                     }
                     else
                     {
@@ -66,12 +94,13 @@ namespace KIS
             {
                 if (KISAddonPointer.isRunning && KISAddonPickup.instance.pointerMode == KISAddonPickup.PointerMode.Attach)
                 {
+                    KISAddonPointer.toolAttachModeIsWeld = attachModeIsWeld;
                     KISAddonPickup.instance.pointerMode = KISAddonPickup.PointerMode.Drop;
                     KISAddonPointer.allowStack = false;
                     item.PlaySound(changeModeSndPath);
                 }
             }
-                            
+
         }
 
         public override void OnEquip(KIS_Item item)
@@ -80,6 +109,8 @@ namespace KIS
             if (pickupModule)
             {
                 pickupModule.canDetach = true;
+                orgDetachModeIsWeld = pickupModule.detachModeIsWeld;
+                pickupModule.detachModeIsWeld = attachModeIsWeld;
                 orgAttachMaxMass = pickupModule.detachMaxMass;
                 pickupModule.detachMaxMass = attachMaxMass;
                 orgAttachSndPath = pickupModule.attachSndPath;
@@ -95,6 +126,7 @@ namespace KIS
             if (pickupModule)
             {
                 pickupModule.canDetach = false;
+                pickupModule.detachModeIsWeld = orgDetachModeIsWeld;
                 pickupModule.detachMaxMass = orgAttachMaxMass;
                 pickupModule.attachSndPath = orgAttachSndPath;
                 pickupModule.detachSndPath = orgDetachSndPath;

@@ -373,6 +373,27 @@ namespace KIS
                     return;
                 }
 
+                // Check if part can be detached from parent with this tool
+                if (part.parent && part.Modules.Contains("ModuleKISPartAttachMode"))
+                {
+                    ModuleFlightAttachMode mkpam = (part.Modules["ModuleKISPartAttachMode"] as ModuleFlightAttachMode);
+                    if (!mkpam.canBeWeld && !mkpam.canBeScrewed)
+                    {
+                        CursorEnable("KIS/Textures/forbidden", "Can't grab", "(Part can't be detached without a tool");
+                        return;
+                    }
+                    if (pickupModule.detachModeIsWeld && !mkpam.canBeWeld)
+                    {
+                        CursorEnable("KIS/Textures/forbidden", "Can't grab", "(Part can't be detached without a screwdriver");
+                        return;
+                    }
+                    if (mkpam.isWelded || !mkpam.canBeScrewed )
+                    {
+                        CursorEnable("KIS/Textures/forbidden", "Can't grab", "(Part can't be detached : it's welded");
+                        return;
+                    }
+                }
+
                 // Check part childrens
                 if (part.children.Count > 0)
                 {
@@ -681,16 +702,27 @@ namespace KIS
                 }
                 if (pointerMode == PointerMode.Attach)
                 {
+                    Part scrPart = null;
                     if (movingPart)
                     {
+                        scrPart = movingPart;
                         MoveAttach(tgtPart, pos, rot, srcAttachNodeID, tgtAttachNode);
                     }
                     else
                     {
-                        CreateAttach(tgtPart, pos, rot, srcAttachNodeID, tgtAttachNode);
+                        scrPart = CreateAttach(tgtPart, pos, rot, srcAttachNodeID, tgtAttachNode);
                     }
                     ModuleKISPickup modulePickup = GetActivePickupNearest(pos);
                     if (modulePickup) AudioSource.PlayClipAtPoint(GameDatabase.Instance.GetAudioClip(modulePickup.attachSndPath), pos);
+                    //set welded if needed
+                    if ( (pointerTarget == KISAddonPointer.PointerTarget.Part
+                        || pointerTarget == KISAddonPointer.PointerTarget.PartNode)
+                        && scrPart.Modules.Contains("ModuleKISPartAttachMode")
+                        )
+                    {
+                        ModuleFlightAttachMode mkpam = scrPart.Modules["ModuleKISPartAttachMode"] as ModuleFlightAttachMode;
+                        mkpam.isWelded = KISAddonPointer.toolAttachModeIsWeld;
+                    }
                 }
             }
             draggedItem = null;
@@ -774,7 +806,7 @@ namespace KIS
                 newPart = KIS_Shared.CreatePart(draggedItem.partNode, pos, rot, draggedItem.inventory.part);
                 KIS_Shared.SendKISMessage(newPart, KIS_Shared.MessageAction.AttachEnd, tgtPart, tgtAttachNode);
             }
-         
+
             KISAddonPointer.StopPointer();
             draggedItem.StackRemove(1);
             movingPart = null;

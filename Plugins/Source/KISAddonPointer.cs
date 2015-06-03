@@ -19,6 +19,7 @@ namespace KIS
         public static bool allowPartItself = false;
         public static bool allowEva = false;
         public static bool allowStatic = false;
+        public static bool toolAttachModeIsWeld = false;
 
 
         private static bool _allowMount = false;
@@ -525,6 +526,8 @@ namespace KIS
             bool cannotSurfaceAttach = false;
             bool invalidCurrentNode = false;
             bool itselfIsInvalid = false;
+            bool wrongTool = false;
+            bool cannotAttach = false;
             switch (pointerTarget)
             {
                 case PointerTarget.Static:
@@ -546,7 +549,13 @@ namespace KIS
                         {
                             itselfIsInvalid = true;
                         }
-                        else
+                        else if (partToAttach.Modules.Contains("ModuleKISPartAttachMode"))
+                        {
+                            ModuleFlightAttachMode mkpam = (partToAttach.Modules["ModuleKISPartAttachMode"] as ModuleFlightAttachMode);
+                            cannotAttach = !mkpam.canBeWeld && !mkpam.canBeScrewed;
+                            if (!cannotAttach) wrongTool = toolAttachModeIsWeld ? !mkpam.canBeWeld : !mkpam.canBeScrewed;
+                        }
+                        if (!itselfIsInvalid && !wrongTool && !cannotAttach)
                         {
                             if (useAttachRules)
                             {
@@ -566,6 +575,7 @@ namespace KIS
                             else
                             {
                                 color = Color.green;
+
                             }
                         }
                     }
@@ -589,8 +599,18 @@ namespace KIS
                     }
                     break;
                 case PointerTarget.PartNode:
-                    if (allowStack) color = XKCDColors.SeaGreen;
-                    else invalidTarget = true;
+                    //test if target can accept the attach mode
+                    if (partToAttach.Modules.Contains("ModuleKISPartAttachMode"))
+                    {
+                        ModuleFlightAttachMode mkpam = (partToAttach.Modules["ModuleKISPartAttachMode"] as ModuleFlightAttachMode);
+                        cannotAttach = !mkpam.canBeWeld && !mkpam.canBeScrewed;
+                        if (!cannotAttach) wrongTool = toolAttachModeIsWeld ? !mkpam.canBeWeld : !mkpam.canBeScrewed;
+                    }
+                    if (!cannotAttach)
+                    { 
+                        if (allowStack) color = XKCDColors.SeaGreen;
+                        else invalidTarget = true;
+                    }
                     break;
                 default:
                     break;
@@ -645,6 +665,19 @@ namespace KIS
                 else if (!isValidTargetDist)
                 {
                     ScreenMessages.PostScreenMessage("Too far from target !");
+                    audioBipWrong.Play();
+                    return;
+                }
+                else if (wrongTool)
+                {
+                    ScreenMessages.PostScreenMessage("Target part need a "
+                        + (toolAttachModeIsWeld ? "welding tool" : "screwdriver") + " to attach something on it !");
+                    audioBipWrong.Play();
+                    return;
+                }
+                else if (cannotAttach)
+                {
+                    ScreenMessages.PostScreenMessage("Target part do not allow attach !");
                     audioBipWrong.Play();
                     return;
                 }
