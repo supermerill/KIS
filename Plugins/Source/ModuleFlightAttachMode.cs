@@ -48,7 +48,29 @@ namespace KIS
             }
             return info;
         }
-    }
 
+		public override void OnStart(PartModule.StartState state)
+		{
+			base.OnStart(state);
+			if (state == StartState.PreLaunch)
+			{
+				if (!this.canBeScrewed) this.isWelded = true;
+				else if (part.parent.Modules.Contains("ModuleFlightAttachMode"))
+				{
+					ModuleFlightAttachMode parentMod = part.parent.Modules["ModuleFlightAttachMode"] as ModuleFlightAttachMode;
+					if (parentMod.canBeScrewed)
+					{
+						//this piece in screwed in the vab if the parent and this can be screwed together.
+						this.isWelded = false;
+					}
+				}
+				else
+				{
+					//this part can be screwed and the parent has no information => ok for screwing.
+					this.isWelded = false;
+				}
+			}
+		}
+    }
 
 }

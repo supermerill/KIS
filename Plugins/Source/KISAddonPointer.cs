@@ -549,9 +549,9 @@ namespace KIS
                         {
                             itselfIsInvalid = true;
                         }
-                        else if (partToAttach.Modules.Contains("ModuleKISPartAttachMode"))
+						else if (partToAttach.Modules.Contains("ModuleFlightAttachMode"))
                         {
-                            ModuleFlightAttachMode mkpam = (partToAttach.Modules["ModuleKISPartAttachMode"] as ModuleFlightAttachMode);
+							ModuleFlightAttachMode mkpam = (partToAttach.Modules["ModuleFlightAttachMode"] as ModuleFlightAttachMode);
                             cannotAttach = !mkpam.canBeWeld && !mkpam.canBeScrewed;
                             if (!cannotAttach) wrongTool = toolAttachModeIsWeld ? !mkpam.canBeWeld : !mkpam.canBeScrewed;
                         }
@@ -600,9 +600,9 @@ namespace KIS
                     break;
                 case PointerTarget.PartNode:
                     //test if target can accept the attach mode
-                    if (partToAttach.Modules.Contains("ModuleKISPartAttachMode"))
+					if (partToAttach.Modules.Contains("ModuleFlightAttachMode"))
                     {
-                        ModuleFlightAttachMode mkpam = (partToAttach.Modules["ModuleKISPartAttachMode"] as ModuleFlightAttachMode);
+						ModuleFlightAttachMode mkpam = (partToAttach.Modules["ModuleFlightAttachMode"] as ModuleFlightAttachMode);
                         cannotAttach = !mkpam.canBeWeld && !mkpam.canBeScrewed;
                         if (!cannotAttach) wrongTool = toolAttachModeIsWeld ? !mkpam.canBeWeld : !mkpam.canBeScrewed;
                     }

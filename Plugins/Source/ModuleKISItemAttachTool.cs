@@ -55,9 +55,9 @@ namespace KIS
                     {
                         //test if the tool can fix this part (screw or weld)
                         bool testIfCanAttachPart = true;
-                        if (KISAddonPointer.partToAttach.Modules.Contains("ModuleKISPartAttachMode"))
+						if (KISAddonPointer.partToAttach.Modules.Contains("ModuleFlightAttachMode"))
                         {
-                            ModuleFlightAttachMode mkpam = (KISAddonPointer.partToAttach.Modules["ModuleKISPartAttachMode"] as ModuleFlightAttachMode);
+							ModuleFlightAttachMode mkpam = (KISAddonPointer.partToAttach.Modules["ModuleFlightAttachMode"] as ModuleFlightAttachMode);
                             if (!mkpam.canBeWeld && !mkpam.canBeScrewed)
                             {
                                 ScreenMessages.PostScreenMessage("This part can't be attached", 5, ScreenMessageStyle.UPPER_CENTER);

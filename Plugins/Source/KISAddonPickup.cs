@@ -374,10 +374,10 @@ namespace KIS
                 }
 
                 // Check if part can be detached from parent with this tool
-                if (part.parent && part.Modules.Contains("ModuleKISPartAttachMode"))
+				if (part.parent && part.Modules.Contains("ModuleFlightAttachMode"))
                 {
-                    ModuleFlightAttachMode mkpam = (part.Modules["ModuleKISPartAttachMode"] as ModuleFlightAttachMode);
-                    if (!mkpam.canBeWeld && !mkpam.canBeScrewed)
+					ModuleFlightAttachMode mkpam = (part.Modules["ModuleFlightAttachMode"] as ModuleFlightAttachMode);
+					if (!mkpam.canBeWeld && !mkpam.canBeScrewed)
                     {
                         CursorEnable("KIS/Textures/forbidden", "Can't grab", "(Part can't be detached without a tool");
                         return;
@@ -712,16 +712,16 @@ namespace KIS
                     {
                         scrPart = CreateAttach(tgtPart, pos, rot, srcAttachNodeID, tgtAttachNode);
                     }
-                    ModuleKISPickup modulePickup = GetActivePickupNearest(pos);
-                    if (modulePickup) AudioSource.PlayClipAtPoint(GameDatabase.Instance.GetAudioClip(modulePickup.attachSndPath), pos);
+					ModuleKISPickup modulePickup = GetActivePickupNearest(pos);
+					if (modulePickup) AudioSource.PlayClipAtPoint(GameDatabase.Instance.GetAudioClip(modulePickup.attachSndPath), pos);
                     //set welded if needed
                     if ( (pointerTarget == KISAddonPointer.PointerTarget.Part
                         || pointerTarget == KISAddonPointer.PointerTarget.PartNode)
-                        && scrPart.Modules.Contains("ModuleKISPartAttachMode")
+						&& scrPart.Modules.Contains("ModuleFlightAttachMode")
                         )
                     {
-                        ModuleFlightAttachMode mkpam = scrPart.Modules["ModuleKISPartAttachMode"] as ModuleFlightAttachMode;
-                        mkpam.isWelded = KISAddonPointer.toolAttachModeIsWeld;
+						ModuleFlightAttachMode mkpam = scrPart.Modules["ModuleFlightAttachMode"] as ModuleFlightAttachMode;
+						mkpam.isWelded = KISAddonPointer.toolAttachModeIsWeld;
                     }
                 }
             }
